@@ -1,0 +1,7 @@
+
+flask
+flask-cors
+radon
+requests
+python-dotenv
+PyGithub==2.6.0
