@@ -1,0 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Optional: Heatmap styles */
+.heatmap-high { background-color: rgba(239, 68, 68, 0.3) !important; }
+.heatmap-medium { background-color: rgba(234, 179, 8, 0.3) !important; }
+.heatmap-low { background-color: rgba(74, 222, 128, 0.3) !important; }
