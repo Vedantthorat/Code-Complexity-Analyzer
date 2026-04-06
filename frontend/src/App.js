@@ -26,6 +26,8 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
+const API_URL = "https://vedant8771.pythonanywhere.com";
+
 function App() {
   const [activeTab, setActiveTab] = useState("single");
   const [code, setCode] = useState("");
@@ -35,23 +37,18 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [aiResult, setAiResult] = useState(null);
   const editorRef = useRef(null);
-
   // Preview Modal
   const [previewFile, setPreviewFile] = useState(null);
   const previewEditorRef = useRef(null);
   const [copied, setCopied] = useState(false);
-
   // Progress
   const [progress, setProgress] = useState(0);
-
   // Drag & Drop
   const [isDragging, setIsDragging] = useState(false);
   const multiFileInputRef = useRef(null);
-
   // Function Details Modal
   const [showFunctionModal, setShowFunctionModal] = useState(false);
   const [modalFunctions, setModalFunctions] = useState([]);
-
   // =========================
   // FETCH HELPER
   // =========================
@@ -65,7 +62,6 @@ function App() {
     if (!res.ok) throw new Error(data.error || "Backend error");
     return data;
   };
-
   // =========================
   // PROGRESS
   // =========================
@@ -87,14 +83,14 @@ function App() {
     }
     return () => clearInterval(interval);
   }, [loading]);
-
   // =========================
   // ANALYZE FUNCTIONS
   // =========================
   const analyzeCode = async () => {
     setLoading(true);
     try {
-      const data = await fetchWithError("http://localhost:5000/analyze", { code });
+      const data = await fetchWithError(`${API_URL}/analyze`, { code });
+     
       setResults(data);
       if (editorRef.current) applyHeatmap(data.functions || []);
     } catch (e) {
@@ -103,11 +99,10 @@ function App() {
     }
     setLoading(false);
   };
-
   const analyzeMulti = async () => {
     setLoading(true);
     try {
-      const data = await fetchWithError("http://localhost:5000/analyze-multi", { files });
+      const data = await fetchWithError(`${API_URL}/analyze-multi`, { files });
       setResults(data);
     } catch (e) {
       alert(e.message);
@@ -115,11 +110,10 @@ function App() {
     }
     setLoading(false);
   };
-
   const analyzeRepo = async () => {
     setLoading(true);
     try {
-      const data = await fetchWithError("http://localhost:5000/analyze-repo", { repo_url: githubUrl });
+      const data = await fetchWithError(`${API_URL}/analyze-repo`, { repo_url: githubUrl });
       setResults(data);
     } catch (e) {
       alert(e.message);
@@ -127,7 +121,6 @@ function App() {
     }
     setLoading(false);
   };
-
   const analyzeWithAI = async () => {
     setLoading(true);
     try {
@@ -139,7 +132,7 @@ function App() {
         setLoading(false);
         return;
       }
-      const data = await fetchWithError("http://localhost:5000/ai-analyze", body);
+      const data = await fetchWithError(`${API_URL}/ai-analyze`, body);
       let parsed = typeof data.ai_analysis === "string" ? JSON.parse(data.ai_analysis) : data.ai_analysis;
       setAiResult(parsed);
     } catch (e) {
@@ -147,7 +140,6 @@ function App() {
     }
     setLoading(false);
   };
-
   // =========================
   // HEATMAP
   // =========================
@@ -172,7 +164,6 @@ function App() {
     }));
     editorRef.current.deltaDecorations([], decorations);
   };
-
   // =========================
   // MULTI FILE
   // =========================
@@ -195,7 +186,6 @@ function App() {
     );
     setFiles((prev) => [...prev, ...fileData]);
   };
-
   const handleMultiUpload = (e) => processFiles(e.target.files);
   const handleDrop = (e) => {
     e.preventDefault();
@@ -203,13 +193,10 @@ function App() {
     setIsDragging(false);
     processFiles(e.dataTransfer.files);
   };
-
   const removeFile = (index) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
-
   const clearAllFiles = () => setFiles([]);
-
   // =========================
   // LINTER
   // =========================
@@ -217,10 +204,8 @@ function App() {
     if (!editorInstance || !window.monaco) return;
     const model = editorInstance.getModel();
     if (!model) return;
-
     const lines = codeText.split("\n");
     const markers = [];
-
     lines.forEach((line, i) => {
       const lineNum = i + 1;
       if (line.includes("print(") && !line.includes("logging")) {
@@ -254,10 +239,8 @@ function App() {
         });
       }
     });
-
     window.monaco.editor.setModelMarkers(model, "python-linter", markers);
   };
-
   // =========================
   // CHART & METRICS
   // =========================
@@ -265,15 +248,12 @@ function App() {
     name: f.name,
     complexity: f.complexity,
   })) || [];
-
   const totalFunctions = results?.functions?.length || 0;
   const avgComplexity = totalFunctions
     ? Math.round(results.functions.reduce((sum, f) => sum + f.complexity, 0) / totalFunctions)
     : 0;
   const highRiskCount = results?.functions?.filter((f) => f.complexity > 15).length || 0;
-
   const totalLines = files.reduce((sum, f) => sum + (f.code.split("\n").length), 0);
-
   // =========================
   // UI
   // =========================
@@ -298,7 +278,6 @@ function App() {
             Backend Connected
           </div>
         </div>
-
         {/* TABS */}
         <div className="inline-flex bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-1 mb-10 shadow-2xl">
           {[
@@ -321,7 +300,6 @@ function App() {
             );
           })}
         </div>
-
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* LEFT: INPUT AREA */}
           <div className="lg:col-span-7">
@@ -381,7 +359,6 @@ function App() {
                 </div>
               </div>
             )}
-
             {/* MULTI FILE */}
             {activeTab === "multi" && (
               <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
@@ -405,7 +382,6 @@ function App() {
                     </div>
                   )}
                 </div>
-
                 <div
                   className={`flex flex-col items-center justify-center border-2 border-dashed rounded-3xl py-16 cursor-pointer transition-all group ${
                     isDragging ? "border-amber-400 bg-amber-400/10 scale-105" : "border-white/30 hover:border-amber-400/60"
@@ -429,7 +405,6 @@ function App() {
                     className="hidden"
                   />
                 </div>
-
                 {files.length > 0 && (
                   <div className="mt-8">
                     <div className="space-y-2 max-h-72 overflow-auto pr-2">
@@ -468,7 +443,6 @@ function App() {
                     </div>
                   </div>
                 )}
-
                 <div className="flex gap-3 mt-8">
                   <button
                     onClick={analyzeMulti}
@@ -488,7 +462,6 @@ function App() {
                 </div>
               </div>
             )}
-
             {/* REPO */}
             {activeTab === "repo" && (
               <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-8 shadow-2xl">
@@ -529,7 +502,6 @@ function App() {
               </div>
             )}
           </div>
-
           {/* RIGHT: DASHBOARD */}
           <div className="lg:col-span-5 space-y-8">
             {results && (
@@ -566,7 +538,6 @@ function App() {
                 </button>
               </div>
             )}
-
             {aiResult && (
               <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-7 shadow-2xl">
                 <div className="flex items-center gap-x-3 mb-6">
@@ -629,7 +600,6 @@ function App() {
                 )}
               </div>
             )}
-
             {loading && (
               <div className="bg-white/10 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 flex flex-col items-center justify-center text-center">
                 <div className="w-full max-w-xs bg-white/10 h-2.5 rounded-3xl overflow-hidden mb-6">
@@ -644,7 +614,6 @@ function App() {
                 </p>
               </div>
             )}
-
             {!results && !aiResult && !loading && (
               <div className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-3xl p-10 text-center h-full flex flex-col items-center justify-center">
                 <div className="text-6xl mb-6 opacity-30">📡</div>
@@ -654,7 +623,6 @@ function App() {
             )}
           </div>
         </div>
-
         {/* BOTTOM CHART */}
         {chartData.length > 0 && (
           <>
@@ -673,7 +641,6 @@ function App() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-
             <div className="flex justify-end mt-6">
               <button
                 onClick={() => {
@@ -693,7 +660,6 @@ function App() {
           </>
         )}
       </div>
-
       {/* PREVIEW MODAL - FIXED (no blank screen) */}
       {previewFile && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[10000] p-6">
@@ -708,7 +674,6 @@ function App() {
                   </p>
                 </div>
               </div>
-
               <div className="flex items-center gap-x-4">
                 <button
                   onClick={() => runLinter(previewFile.code, previewEditorRef.current)}
@@ -717,7 +682,6 @@ function App() {
                   <AlertTriangle className="w-4 h-4" />
                   Run Linter
                 </button>
-
                 <button
                   onClick={() => {
                     navigator.clipboard.writeText(previewFile.code);
@@ -729,7 +693,6 @@ function App() {
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   {copied ? "Copied!" : "Copy Code"}
                 </button>
-
                 <button
                   onClick={() => {
                     const blob = new Blob([previewFile.code], { type: "text/plain" });
@@ -744,7 +707,6 @@ function App() {
                   <Download className="w-4 h-4" />
                   Download .py
                 </button>
-
                 <button
                   onClick={() => setPreviewFile(null)}
                   className="p-2 hover:bg-white/10 rounded-2xl transition-colors"
@@ -753,7 +715,6 @@ function App() {
                 </button>
               </div>
             </div>
-
             {/* FIXED EDITOR - No more blank screen */}
             <div className="flex-1 p-4 bg-[#1e1e1e] overflow-hidden" style={{ height: "640px" }}>
               <Editor
@@ -779,7 +740,6 @@ function App() {
                 }}
               />
             </div>
-
             <div className="px-8 py-3 text-xs text-white/40 border-t border-white/10 flex items-center justify-between bg-zinc-950">
               <div>Read-only preview • Monaco Editor • Linter active</div>
               <div className="flex items-center gap-x-2">
@@ -789,7 +749,6 @@ function App() {
           </div>
         </div>
       )}
-
       {/* FUNCTION DETAILS MODAL */}
       {showFunctionModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999] p-4">
